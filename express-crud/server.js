@@ -9,7 +9,6 @@ app.use(bodyParser.json());
 
 // Create a MySQL connection
 const connection = mysql.createConnection({
-  port: "3307",
   password: "password",
   user: "root",
   database: "test"
@@ -24,9 +23,30 @@ connection.connect((err) => {
   }
 });
 
-// GET all albums
+// GET all artists
+app.get("/", (req, res) => {
+    connection.query("SELECT * FROM artists", (error, results) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  });
+
+// GET a single artist by ID
+app.get("/:id", (req, res) => {
+    const artistId = parseInt(req.params.id);
+    connection.query("SELECT * FROM artists WHERE id = ?", [artistId], (error, results) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  });
+
+// GET all albums with artist name listed
 app.get("/albums", (req, res) => {
-  connection.query("SELECT * FROM albums", (error, results) => {
+  connection.query(`
+  SELECT albums.id, artists.name AS artist_name, albums.title, albums.year_released, albums.genre, albums.num
+  FROM albums
+  JOIN artists ON albums.artist = artists.id;
+`, (error, results) => {
     if (error) throw error;
     res.json(results);
   });
@@ -45,6 +65,33 @@ app.get("/albums/:id", (req, res) => {
     }
   });
 });
+
+// GET a single album by title
+app.get("/album/:title", (req, res) => {
+  const albumTitle = req.params.title;
+  connection.query(`
+  SELECT albums.id, artists.name AS artist_name, albums.title, albums.year_released, albums.genre
+  FROM albums
+  JOIN artists ON albums.artist = artists.id WHERE title = ?
+  `, [albumTitle], (error, results) => {
+    if (error) throw error;
+    res.json(results[0]);
+  });
+});
+
+// GET albums by genre
+app.get("/albums/genre/:genre", (req, res) => {
+    const genre = req.params.genre;
+    connection.query(`
+    SELECT albums.id, artists.name AS artist_name, albums.title, albums.year_released, albums.genre
+    FROM albums
+    JOIN artists ON albums.artist = artists.id
+    WHERE albums.genre = ?;
+    `, [genre], (error, results) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  });
 
 // POST a new album
 app.post("/albums", (req, res) => {

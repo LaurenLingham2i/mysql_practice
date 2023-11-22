@@ -3,5 +3,6 @@ albums.sql file contains the seeds for the database as well as some SQL queries.
 Once you have the database running you can run the Express server  
 ```
 cd .\express-crud\
+npm i
 node .\server.js
 ```
